@@ -1,0 +1,19 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.controls {
+    margin: 20px;
+}
+
+#paint-canvas {
+    border: 1px solid #000000;
+    cursor: crosshair;
+    background-color: #ffffff; 
+}
