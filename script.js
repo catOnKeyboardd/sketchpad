@@ -5,17 +5,23 @@ const brushSize = document.getElementById('brush-size');
 const clearCanvas = document.getElementById('clear-canvas');
 const toggleEraser = document.getElementById('toggle-eraser');
 const downloadCanvas = document.getElementById('download-canvas');
+const importImage = document.getElementById('import-image');
 
 let painting = false;
 let erasing = false;
 let currentColor = colorPicker.value;
 let currentBrushSize = brushSize.value;
 
-// Set canvas size
 canvas.width = window.innerWidth - 40;
 canvas.height = window.innerHeight - 100;
 
-// Update brush color
+// Off-screen canvas for color picking
+const offscreenCanvas = document.createElement('canvas');
+const offscreenCtx = offscreenCanvas.getContext('2d');
+offscreenCanvas.width = canvas.width;
+offscreenCanvas.height = canvas.height;
+
+// Brush color
 colorPicker.addEventListener('input', (e) => {
     currentColor = e.target.value;
     if (!erasing) {
@@ -23,7 +29,7 @@ colorPicker.addEventListener('input', (e) => {
     }
 });
 
-// Update brush size
+// Brush size
 brushSize.addEventListener('input', (e) => {
     currentBrushSize = e.target.value;
 });
@@ -53,18 +59,40 @@ downloadCanvas.addEventListener('click', () => {
     link.click();
 });
 
-// Start painting or erasing
+// Import image to canvas
+importImage.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Color match
+function getColorAtPosition(x, y) {
+    const pixel = offscreenCtx.getImageData(x, y, 1, 1).data;
+    return `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`;
+}
+
+// Start action
 canvas.addEventListener('mousedown', () => {
     painting = true;
 });
 
-// Stop painting or erasing
+// Stop action
 canvas.addEventListener('mouseup', () => {
     painting = false;
     ctx.beginPath();
 });
 
-// Draw or erase on canvas
+// Draw/Erase
 canvas.addEventListener('mousemove', (e) => {
     if (painting) {
         ctx.lineWidth = currentBrushSize;
@@ -74,5 +102,18 @@ canvas.addEventListener('mousemove', (e) => {
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+
+        // Update offscreen canvas with current drawing
+        offscreenCtx.drawImage(canvas, 0, 0);
+    }
+});
+
+// Color pick
+canvas.addEventListener('mousemove', (e) => {
+    const x = e.clientX - canvas.offsetLeft;
+    const y = e.clientY - canvas.offsetTop;
+    currentColor = getColorAtPosition(x, y);
+    if (!erasing) {
+        ctx.strokeStyle = currentColor;
     }
 });
