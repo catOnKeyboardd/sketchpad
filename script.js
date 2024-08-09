@@ -11,6 +11,7 @@ let painting = false;
 let erasing = false;
 let currentColor = colorPicker.value;
 let currentBrushSize = brushSize.value;
+let colorPicked = false;  // Flag to track if color has been picked
 
 canvas.width = window.innerWidth - 40;
 canvas.height = window.innerHeight - 100;
@@ -75,7 +76,7 @@ importImage.addEventListener('change', (e) => {
     }
 });
 
-// Color match
+// Function to get color from position
 function getColorAtPosition(x, y) {
     const pixel = offscreenCtx.getImageData(x, y, 1, 1).data;
     return `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`;
@@ -84,6 +85,7 @@ function getColorAtPosition(x, y) {
 // Start action
 canvas.addEventListener('mousedown', () => {
     painting = true;
+    colorPicked = false;  // Reset color picking flag
 });
 
 // Stop action
@@ -102,8 +104,6 @@ canvas.addEventListener('mousemove', (e) => {
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
-
-        // Update offscreen canvas with current drawing
         offscreenCtx.drawImage(canvas, 0, 0);
     }
 });
@@ -112,8 +112,11 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mousemove', (e) => {
     const x = e.clientX - canvas.offsetLeft;
     const y = e.clientY - canvas.offsetTop;
-    currentColor = getColorAtPosition(x, y);
-    if (!erasing) {
-        ctx.strokeStyle = currentColor;
+    if (!colorPicked) {  
+        currentColor = getColorAtPosition(x, y);
+        if (!erasing) {
+            ctx.strokeStyle = currentColor;
+        }
+        colorPicked = true; 
     }
 });
